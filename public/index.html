@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teamtailor CSV Exporter</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      min-height: 100vh; color: #e2e8f0;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .card {
+      background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(71, 85, 105, 0.5);
+      border-radius: 24px; padding: 48px; max-width: 480px; width: 100%;
+      backdrop-filter: blur(10px); box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    }
+    .logo {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      margin-bottom: 24px; box-shadow: 0 10px 30px rgba(99,102,241,0.3);
+    }
+    .logo svg { width: 28px; height: 28px; color: white; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 32px; }
+    label { display: block; font-size: 14px; font-weight: 500; color: #cbd5e1; margin-bottom: 8px; }
+    input {
+      width: 100%; padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.6); border: 1px solid #475569;
+      border-radius: 12px; color: #e2e8f0; font-size: 14px; outline: none;
+      transition: border-color 0.2s; margin-bottom: 8px;
+    }
+    input:focus { border-color: #6366f1; }
+    .hint { font-size: 12px; color: #64748b; margin-bottom: 24px; }
+    button {
+      width: 100%; padding: 14px 24px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; box-shadow: 0 10px 25px rgba(79,70,229,0.3);
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 15px 35px rgba(79,70,229,0.4); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .status { margin-top: 20px; padding: 12px 16px; border-radius: 12px; font-size: 14px; display: none; }
+    .status.loading { display: block; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; }
+    .status.success { display: block; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+    .status.error { display: block; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+    .columns { margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(71,85,105,0.4); }
+    .columns h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #6366f1; margin-bottom: 12px; }
+    .col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .col-item { background: rgba(15,23,42,0.5); padding: 8px 12px; border-radius: 8px; }
+    .col-item code { font-size: 12px; color: #818cf8; font-weight: 600; }
+    .col-item p { font-size: 11px; color: #64748b; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+      </svg>
+    </div>
+    <h1>Teamtailor CSV Exporter</h1>
+    <p class="subtitle">Export candidates &amp; job applications to CSV</p>
+    <label for="apiKey">API Key</label>
+    <input type="password" id="apiKey" placeholder="Enter your Teamtailor API token..." />
+    <p class="hint">Leave empty to use the key from .env file</p>
+    <button id="exportBtn" onclick="exportCSV()">Export Candidates to CSV</button>
+    <div id="status" class="status"></div>
+    <div class="columns">
+      <h3>CSV Columns</h3>
+      <div class="col-grid">
+        <div class="col-item"><code>candidate_id</code><p>Unique ID</p></div>
+        <div class="col-item"><code>first_name</code><p>First name</p></div>
+        <div class="col-item"><code>last_name</code><p>Last name</p></div>
+        <div class="col-item"><code>email</code><p>Email</p></div>
+        <div class="col-item"><code>job_application_id</code><p>Application ID</p></div>
+        <div class="col-item"><code>job_application_created_at</code><p>Created date</p></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    async function exportCSV() {
+      let btn = document.getElementById("exportBtn");
+      let status = document.getElementById("status");
+      let apiKey = document.getElementById("apiKey").value;
+      btn.disabled = true;
+      btn.textContent = "Fetching data...";
+      status.className = "status loading";
+      status.textContent = "Connecting to Teamtailor API...";
+      try {
+        let headers = {};
+        if (apiKey) headers["x-api-key"] = apiKey;
+        let response = await fetch("/api/export", { headers: headers });
+        if (!response.ok) {
+          let data = await response.json();
+          throw new Error(data.error || "Server error");
+        }
+        let blob = await response.blob();
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement("a");
+        a.href = url;
+        a.download = "teamtailor-candidates.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        status.className = "status success";
+        status.textContent = "CSV downloaded successfully!";
+      } catch(err) {
+        status.className = "status error";
+        status.textContent = "Error: " + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Export Candidates to CSV";
+      }
+    }
+  </script>
+</body>
+</html>
