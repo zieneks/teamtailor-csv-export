@@ -1,0 +1,22 @@
+{
+  "name": "teamtailor-csv-export",
+  "version": "1.0.0",
+  "description": "Teamtailor Candidates CSV Exporter",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsc && node --watch dist/server.js",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.6",
+    "@types/node-fetch": "^2.6.13",
+    "typescript": "^5.3.3"
+  }
+}
