@@ -5,7 +5,7 @@ Node.js + TypeScript web app that exports candidates from Teamtailor to CSV.
 ## Setup
 
 1. `npm install` — install dependencies
-2. Create and Edit `.env` — set your `TEAMTAILOR_API_KEY` in the TEAMTAILOR_API_KEY prop and add PORT=3000
+2. Create and Edit `.env` — set your `TEAMTAILOR_API_KEY` in the TEAMTAILOR_API_KEY prop and add PORT=3000 or just type api key into input 
 3. `npm run build` — compile TypeScript to JavaScript
 4. `npm start` — start the server
 5. Open http://localhost:3000
